@@ -8,5 +8,5 @@ WORKDIR /app
 COPY --from=builder /app/node_modules ./node_modules
 COPY package.json ./
 COPY src/ ./src/
-EXPOSE 3001
+EXPOSE 3002
 CMD ["npx", "tsx", "src/index.ts"]

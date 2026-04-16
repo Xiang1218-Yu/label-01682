@@ -9,8 +9,6 @@ import { FlightCard } from '../components/FlightCard'
 import { FilterSortBar } from '../components/FilterSortBar'
 import { PriceCalendar } from '../components/PriceCalendar'
 import { useToasts, ToastContainer, NoticeBanner, SkeletonLoading, Sidebar } from '../components/common'
-import { SearchHistory } from '../components/SearchHistory'
-import { useSearchHistory } from '../hooks/useSearchHistory'
 import './index.css'
 
 const log = createLogger('FlightSearch')
@@ -23,14 +21,6 @@ function IndexPage({ onNavigateToOrder }: { onNavigateToOrder: (flightId: string
   const [searchParams, setSearchParams] = useState<SearchParams>({
     tripType: 'oneway', from: { code: 'PEK', name: '北京首都国际机场' }, to: { code: 'JFK', name: '纽约肯尼迪国际机场' },
     departDate: todayStr, passengers: { adults: 1, children: 0, infants: 0 }, cabinClass: 'economy',
-    filters: {
-      airlines: [],
-      priceRange: [0, 10000],
-      departTimeRange: [0, 24],
-      arriveTimeRange: [0, 24],
-      stops: [],
-      onlyDirect: false
-    }
   })
   const [flights, setFlights] = useState<FlightOffer[]>([])
   const [returnFlights, setReturnFlights] = useState<FlightOffer[]>([])
@@ -43,71 +33,22 @@ function IndexPage({ onNavigateToOrder }: { onNavigateToOrder: (flightId: string
   const [onlyDirect, setOnlyDirect] = useState(false)
   const [selectedAirlines, setSelectedAirlines] = useState<string[]>([])
   const [filterLoading, setFilterLoading] = useState(false)
-  // 搜索历史功能
-  const { history, addSearchHistory, deleteSearchHistory, clearSearchHistory } = useSearchHistory()
   const activeFlights = activeLeg === 'return' && searchParams.tripType === 'roundtrip' ? returnFlights : flights
   const allAirlines = useMemo(() => [...new Set(activeFlights.flatMap((f) => f.segments.map((s) => s.airline)))], [activeFlights])
   const filteredFlights = useMemo(() => {
     let result = [...activeFlights]
-
-    // 应用基础筛选条件
     if (onlyDirect) result = result.filter((f) => f.segments.length === 1 && f.segments[0].stops === 0)
     if (selectedAirlines.length > 0) result = result.filter((f) => f.segments.some((s) => selectedAirlines.includes(s.airline)))
-
-    // 应用高级筛选条件（如果有）
-    if (searchParams.filters) {
-      const filters = searchParams.filters
-      
-      // 航空公司筛选
-      if (filters.airlines.length > 0) {
-        result = result.filter(f => 
-          f.segments.some(s => filters.airlines.includes(s.airline) || filters.airlines.includes(s.airline.slice(0, 2)))
-        )
-      }
-
-      // 价格范围筛选
-      if (filters.priceRange[0] > 0 || filters.priceRange[1] < 10000) {
-        result = result.filter(f => 
-          f.price >= filters.priceRange[0] && f.price <= filters.priceRange[1]
-        )
-      }
-
-      // 出发时间段筛选
-      if (filters.departTimeRange[0] > 0 || filters.departTimeRange[1] < 24) {
-        result = result.filter(f => {
-          const departHour = parseInt(f.segments[0].departTime.split(':')[0])
-          return departHour >= filters.departTimeRange[0] && departHour < filters.departTimeRange[1]
-        })
-      }
-
-      // 到达时间段筛选
-      if (filters.arriveTimeRange[0] > 0 || filters.arriveTimeRange[1] < 24) {
-        result = result.filter(f => {
-          const lastSegment = f.segments[f.segments.length - 1]
-          const arriveHour = parseInt(lastSegment.arriveTime.split(':')[0])
-          return arriveHour >= filters.arriveTimeRange[0] && arriveHour < filters.arriveTimeRange[1]
-        })
-      }
-
-      // 仅直飞筛选
-      if (filters.onlyDirect) {
-        result = result.filter(f => f.segments.length === 1 && f.segments[0].stops === 0)
-      }
-    }
-
-    // 排序逻辑
     result.sort((a, b) => {
       let cmp = 0
       if (sort.field === 'price') cmp = a.price - b.price
       else if (sort.field === 'departTime') cmp = a.segments[0].departTime.localeCompare(b.segments[0].departTime)
       else if (sort.field === 'arriveTime') cmp = a.segments[a.segments.length - 1].arriveTime.localeCompare(b.segments[b.segments.length - 1].arriveTime)
       else if (sort.field === 'duration') cmp = getTotalDurationMinutes(a.segments) - getTotalDurationMinutes(b.segments)
-      else if (sort.field === 'airline') cmp = a.segments[0].airline.localeCompare(b.segments[0].airline, 'zh-CN')
       return sort.order === 'asc' ? cmp : -cmp
     })
-
     return result
-  }, [activeFlights, onlyDirect, selectedAirlines, sort, searchParams.filters])
+  }, [activeFlights, onlyDirect, selectedAirlines, sort])
   const doSearch = useCallback(async (params: SearchParams) => {
     if (!params.departDate || !params.from.code || !params.to.code) {
       addToast('请填写完整的搜索条件', 'error')
@@ -153,8 +94,6 @@ function IndexPage({ onNavigateToOrder }: { onNavigateToOrder: (flightId: string
         setReturnFlights([])
         addToast('找到 ' + searchRes.flights.length + ' 个航班', searchRes.flights.length > 0 ? 'success' : 'info')
       }
-      // 搜索成功，添加到搜索历史
-      addSearchHistory(params)
     } catch (err) {
       const msg = err instanceof ApiError ? err.message : '搜索请求失败，请稍后重试'
       log.error('搜索失败', { error: String(err) })
@@ -219,15 +158,6 @@ function IndexPage({ onNavigateToOrder }: { onNavigateToOrder: (flightId: string
     <ToastContainer toasts={toasts} />
     <main className="main-content"><div className="container">
       <FlightSearchBar params={searchParams} onSearch={doSearch} loading={loading} />
-      
-      {/* 搜索历史 */}
-      <SearchHistory
-        history={history}
-        onHistoryClick={doSearch}
-        onDeleteHistory={deleteSearchHistory}
-        onClearHistory={clearSearchHistory}
-      />
-
       {searched && calendarItems.length > 0 && <PriceCalendar items={calendarItems} selectedDate={searchParams.departDate} onSelect={handleDateSelect} />}
       {searched && <NoticeBanner dataUpdatedAt={dataUpdatedAt} />}
       {searched && !loading && activeFlights.length > 0 && searchParams.tripType === 'roundtrip' && returnFlights.length > 0 && (

@@ -14,7 +14,7 @@ import cors from 'cors'
 import { searchFlights, generatePriceCalendar, getFlightById, searchCities } from './data.js'
 
 const app = express()
-const PORT = parseInt(process.env.PORT || '3001', 10)
+const PORT = parseInt(process.env.PORT || '3002', 10)
 
 app.use(cors())
 app.use(express.json())

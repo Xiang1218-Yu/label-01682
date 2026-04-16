@@ -9,7 +9,7 @@ npm install
 npm run dev
 ```
 
-开发服务器启动在 http://localhost:8081 ，已配置 Vite 代理将 `/api` 请求转发至后端 3001 端口。
+开发服务器启动在 http://localhost:8081 ，已配置 Vite 代理将 `/api` 请求转发至后端 3002 端口。
 
 需先启动后端服务（backend），否则 API 请求会失败。
 

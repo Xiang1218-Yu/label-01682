@@ -43,10 +43,9 @@ export interface PriceCalendarItem {
 
 export type TripType = 'oneway' | 'roundtrip'
 export type CabinClass = 'economy' | 'premium_economy' | 'business' | 'first'
-export type SortField = 'price' | 'departTime' | 'arriveTime' | 'duration' | 'airline'
+export type SortField = 'price' | 'departTime' | 'arriveTime' | 'duration'
 export type SortOrder = 'asc' | 'desc'
 
-// 扩展搜索参数，增加多条件筛选字段
 export interface SearchParams {
   tripType: TripType
   from: Airport
@@ -59,16 +58,6 @@ export interface SearchParams {
     infants: number
   }
   cabinClass: CabinClass
-  // 新增多条件筛选字段
-  filters?: {
-    airlines: string[] // 选中的航空公司列表
-    priceRange: [number, number] // 价格范围 [最小值, 最大值]
-    departTimeRange: [number, number] // 出发时间段 [开始小时, 结束小时] 例如 [6, 12] 表示 06:00-12:00
-    arriveTimeRange: [number, number] // 到达时间段 [开始小时, 结束小时]
-    stops: number[] // 经停次数 0:直飞 1:1次经停 2:2次及以上
-    onlyDirect: boolean // 仅直飞
-  }
-  sort?: SortOption // 排序选项
 }
 
 export interface FilterOptions {
@@ -77,19 +66,9 @@ export interface FilterOptions {
   arriveTimeRange: [number, number]
   stops: number[]
   onlyDirect: boolean
-  priceRange: [number, number]
 }
 
 export interface SortOption {
   field: SortField
   order: SortOrder
 }
-
-// 搜索历史记录类型
-export interface SearchHistoryItem {
-  id: string
-  params: SearchParams
-  timestamp: number
-  description: string // 搜索条件的文本描述，用于展示
-}
-

@@ -4,13 +4,7 @@ import type { SortField, SortOrder } from '../types/flight'
 export function FilterSortBar({ total, sort, onSortChange, onlyDirect, onDirectChange, airlines, selectedAirlines, onAirlineChange }: { total: number; sort: { field: SortField; order: SortOrder }; onSortChange: (f: SortField) => void; onlyDirect: boolean; onDirectChange: (v: boolean) => void; airlines: string[]; selectedAirlines: string[]; onAirlineChange: (v: string[]) => void }) {
   const [showAF, setShowAF] = useState(false); const filterRef = useRef<HTMLDivElement>(null)
   useEffect(() => { const h = (e: MouseEvent) => { if (filterRef.current && !filterRef.current.contains(e.target as Node)) setShowAF(false) }; document.addEventListener('mousedown', h); return () => document.removeEventListener('mousedown', h) }, [])
-  const sortItems: { field: SortField; label: string }[] = [
-    { field: 'price', label: '价格' }, 
-    { field: 'departTime', label: '起飞时间' }, 
-    { field: 'arriveTime', label: '到达时间' }, 
-    { field: 'duration', label: '飞行时长' },
-    { field: 'airline', label: '航空公司' }
-  ]
+  const sortItems: { field: SortField; label: string }[] = [{ field: 'price', label: '价格' }, { field: 'departTime', label: '起飞时间' }, { field: 'arriveTime', label: '到达时间' }, { field: 'duration', label: '飞行时长' }]
   return (<div className="filter-sort-bar">
     <div className="filter-left"><span className="result-count">共找到 <strong>{total}</strong> 个航班</span>
       <label className="direct-filter"><input type="checkbox" checked={onlyDirect} onChange={(e) => onDirectChange(e.target.checked)} /><span>仅看直飞</span></label>

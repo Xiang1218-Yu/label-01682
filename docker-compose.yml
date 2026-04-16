@@ -4,9 +4,9 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     ports:
-      - "3001:3001"
+      - "3003:3003"
     environment:
-      - PORT=3001
+      - PORT=3003
     restart: unless-stopped
 
   frontend-user:
